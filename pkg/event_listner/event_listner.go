@@ -4,6 +4,7 @@ import (
 	"github.com/go-redis/redis"
 	"time"
 	"fmt"
+	"github.com/step/sauron_reporters/pkg/db_writer"
 )
 
 type Listner struct {
@@ -33,6 +34,7 @@ func (l Listner) Start(redisClient *redis.Client, streamName string, r chan<- bo
 		} else{
 			streamValues := val.Val()[0].Messages
 			lastIDRead = streamValues[len(streamValues) - 1].ID
+			dbwriter.Write(streamValues)
 			fmt.Println(streamValues)
 		}
 	}
