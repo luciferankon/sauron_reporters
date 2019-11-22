@@ -24,12 +24,14 @@ func Write(events []redis.XMessage) {
 	}
 
 	fmt.Println("Connected to MongoDB!")
-	eventsCollection := client.Database("sauron_reporters").Collection("event")
+	eventsCollection := client.Database("sauron_reporters").Collection("events")
+	var docs []interface{}
 	for eventPosition := 0; eventPosition < len(events); eventPosition++ {
-		res, err := eventsCollection.InsertOne(context.TODO(), events[eventPosition])
-		fmt.Println(res)
-		if err != nil {
-			fmt.Println(err)
-		}
+		docs = append(docs, events[eventPosition])
 	}
+	res, err := eventsCollection.InsertMany(context.TODO(), docs)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(res)
 }
