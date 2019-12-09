@@ -2,12 +2,63 @@ package dbwriter
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/go-redis/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 )
+
+type Report struct {
+	Job     string `json:"job"`
+	Results string `json:"result"`
+}
+
+type Results struct {
+	Results string `json:"result.json"`
+}
+
+type TestResult struct {
+	Total   int          `json:"total"`
+	Passed  []TestReport `json:"passed"`
+	Failed  []TestReport `json:"failed"`
+	Pending []TestReport `json:"pending"`
+}
+
+type TestReport struct {
+	Suite string `json:"suite"`
+	Title string `json:"title"`
+}
+
+type DBReport struct {
+	Job     string
+	Result  TestResult
+	FlowID  string
+	Project string
+	Pusher  string
+	Time    string
+}
+
+func generateDBReport(report string, event redis.XMessage) DBReport {
+	var reportJSON Report
+	var results Results
+	var testResult TestResult
+	json.Unmarshal([]byte(report), &reportJSON)
+	json.Unmarshal([]byte(reportJSON.Results), &results)
+	json.Unmarshal([]byte(results.Results), &testResult)
+
+	return DBReport{
+		Job:    reportJSON.Job,
+		Result: testResult,
+		FlowID: fmt.Sprintf("%v",event.Values["flowID"]),
+		Project: fmt.Sprintf("%v",event.Values["project"]),
+		Pusher: fmt.Sprintf("%v",event.Values["pusherID"]),
+		Time: fmt.Sprintf("%v",event.Values["timestamp"]),
+	}
+}
 
 func Write(events []redis.XMessage) {
 	clientOptions := options.Client().ApplyURI("mongodb://127.0.0.1:27017")
@@ -23,15 +74,14 @@ func Write(events []redis.XMessage) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
 	eventsCollection := client.Database("sauron_reporters").Collection("events")
 	var docs []interface{}
-	for eventPosition := 0; eventPosition < len(events); eventPosition++ {
-		docs = append(docs, events[eventPosition])
+	for _, event := range events {
+		details := fmt.Sprintf("%v", event.Values["details"])
+		report := details[strings.IndexByte(details, '{'):]
+		dbReport := generateDBReport(report, event)
+		docs = append(docs, dbReport)
 	}
-	res, err := eventsCollection.InsertMany(context.TODO(), docs)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(res)
+
+	eventsCollection.InsertMany(context.TODO(), docs)
 }

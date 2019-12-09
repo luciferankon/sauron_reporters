@@ -1,10 +1,10 @@
 package eventlistner
 
 import (
-	"github.com/go-redis/redis"
 	"time"
-	"fmt"
-	"github.com/step/sauron_reporters/pkg/db_writer"
+
+	"github.com/go-redis/redis"
+	dbwriter "github.com/step/sauron_reporters/pkg/db_writer"
 )
 
 type Listner struct {
@@ -31,12 +31,16 @@ func (l Listner) Start(redisClient *redis.Client, streamName string, r chan<- bo
 		if val == nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
-		} else{
-			streamValues := val.Val()[0].Messages
-			lastIDRead = streamValues[len(streamValues) - 1].ID
-			dbwriter.Write(streamValues)
-			fmt.Println(streamValues)
 		}
+		streamValues := val.Val()[0].Messages
+		lastIDRead = streamValues[len(streamValues)-1].ID
+		var jobCompleteEvents []redis.XMessage
+		for _, value := range streamValues {
+			if value.Values["type"] == "job_complete" {
+				jobCompleteEvents = append(jobCompleteEvents, value)
+			}
+		}
+		dbwriter.Write(jobCompleteEvents)
 	}
 }
 

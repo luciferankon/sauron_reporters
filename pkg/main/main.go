@@ -13,14 +13,14 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
-		DB:       0,  // use default DB
+		DB:       2,  // use default DB
 	})
 	r := make(chan bool, 100)
 	stop := make(chan bool)
 
 	listner := eventlistner.NewListner(*redisClient)
 
-	go listner.Start(redisClient, "mystream", r, stop)
+	go listner.Start(redisClient, "eventHub", r, stop)
 
 	for range r {
 		time.Sleep(time.Millisecond * 100)
