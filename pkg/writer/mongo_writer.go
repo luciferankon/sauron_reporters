@@ -1,4 +1,4 @@
-package dbwriter
+package writer
 
 import (
 	"context"
@@ -7,10 +7,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-redis/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type MongoDbWriter struct{}
 
 type Report struct {
 	Job     string `json:"job"`
@@ -42,7 +43,7 @@ type DBReport struct {
 	Time    string
 }
 
-func generateDBReport(report string, event redis.XMessage) DBReport {
+func generateDBReport(report string, event map[string]interface{}) DBReport {
 	var reportJSON Report
 	var results Results
 	var testResult TestResult
@@ -51,16 +52,16 @@ func generateDBReport(report string, event redis.XMessage) DBReport {
 	json.Unmarshal([]byte(results.Results), &testResult)
 
 	return DBReport{
-		Job:    reportJSON.Job,
-		Result: testResult,
-		FlowID: fmt.Sprintf("%v",event.Values["flowID"]),
-		Project: fmt.Sprintf("%v",event.Values["project"]),
-		Pusher: fmt.Sprintf("%v",event.Values["pusherID"]),
-		Time: fmt.Sprintf("%v",event.Values["timestamp"]),
+		Job:     reportJSON.Job,
+		Result:  testResult,
+		FlowID:  fmt.Sprintf("%v", event["flowID"]),
+		Project: fmt.Sprintf("%v", event["project"]),
+		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
+		Time:    fmt.Sprintf("%v", event["timestamp"]),
 	}
 }
 
-func Write(events []redis.XMessage) {
+func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	clientOptions := options.Client().ApplyURI("mongodb://127.0.0.1:27017")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
@@ -76,12 +77,14 @@ func Write(events []redis.XMessage) {
 
 	eventsCollection := client.Database("sauron_reporters").Collection("events")
 	var docs []interface{}
-	for _, event := range events {
-		details := fmt.Sprintf("%v", event.Values["details"])
-		report := details[strings.IndexByte(details, '{'):]
-		dbReport := generateDBReport(report, event)
-		docs = append(docs, dbReport)
-	}
+	details := fmt.Sprintf("%v", events["details"])
+	report := details[strings.IndexByte(details, '{'):]
+	dbReport := generateDBReport(report, events)
+	docs = append(docs, dbReport)
 
 	eventsCollection.InsertMany(context.TODO(), docs)
+}
+
+func NewMongoWriter() MongoDbWriter {
+	return MongoDbWriter{}
 }
