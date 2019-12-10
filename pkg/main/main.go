@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/step/sauron_reporters/pkg/eventlistener"
-	w "github.com/step/sauron_reporters/pkg/writer"
 )
 
 func main() {
@@ -14,8 +13,8 @@ func main() {
 	r := make(chan bool, 100)
 	stop := make(chan bool)
 	redisClient := getRedisClient()
+	mongoWriter := getMongoWriter()
 
-	mongoWriter := w.NewMongoWriter()
 	listener := eventlistener.NewListner(redisClient, mongoWriter)
 
 	go listener.Start("eventHub", r, stop)

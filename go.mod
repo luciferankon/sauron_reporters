@@ -9,6 +9,7 @@ require (
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
 	github.com/step/angmar v0.0.0-20191127113211-fbeaab94f9b7
+	github.com/step/saurontypes v0.0.0-20191127114135-1c7b69a4e64f
 	github.com/step/uruk v0.0.0-20191127114036-eb84283fad8d
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect

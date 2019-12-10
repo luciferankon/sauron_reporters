@@ -6,52 +6,27 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
+	
+	st "github.com/step/saurontypes"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type MongoDbWriter struct{}
-
-type Report struct {
-	Job     string `json:"job"`
-	Results string `json:"result"`
+type MongoDbWriter struct {
+	URI   string
+	DB    string
+	Table string
 }
 
-type Results struct {
-	Results string `json:"result.json"`
-}
-
-type TestResult struct {
-	Total   int          `json:"total"`
-	Passed  []TestReport `json:"passed"`
-	Failed  []TestReport `json:"failed"`
-	Pending []TestReport `json:"pending"`
-}
-
-type TestReport struct {
-	Suite string `json:"suite"`
-	Title string `json:"title"`
-}
-
-type DBReport struct {
-	Job     string
-	Result  TestResult
-	FlowID  string
-	Project string
-	Pusher  string
-	Time    string
-}
-
-func generateDBReport(report string, event map[string]interface{}) DBReport {
-	var reportJSON Report
-	var results Results
-	var testResult TestResult
+func generateDBReport(report string, event map[string]interface{}) st.DBReport {
+	var reportJSON st.Report
+	var results st.Results
+	var testResult st.TestResult
 	json.Unmarshal([]byte(report), &reportJSON)
 	json.Unmarshal([]byte(reportJSON.Results), &results)
 	json.Unmarshal([]byte(results.Results), &testResult)
 
-	return DBReport{
+	return st.DBReport{
 		Job:     reportJSON.Job,
 		Result:  testResult,
 		FlowID:  fmt.Sprintf("%v", event["flowID"]),
@@ -62,7 +37,7 @@ func generateDBReport(report string, event map[string]interface{}) DBReport {
 }
 
 func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
-	clientOptions := options.Client().ApplyURI("mongodb://127.0.0.1:27017")
+	clientOptions := options.Client().ApplyURI(mdbwriter.URI)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
@@ -75,7 +50,7 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 		log.Fatal(err)
 	}
 
-	eventsCollection := client.Database("sauron_reporters").Collection("events")
+	eventsCollection := client.Database(mdbwriter.DB).Collection(mdbwriter.Table)
 	var docs []interface{}
 	details := fmt.Sprintf("%v", events["details"])
 	report := details[strings.IndexByte(details, '{'):]
@@ -83,8 +58,4 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	docs = append(docs, dbReport)
 
 	eventsCollection.InsertMany(context.TODO(), docs)
-}
-
-func NewMongoWriter() MongoDbWriter {
-	return MongoDbWriter{}
 }
