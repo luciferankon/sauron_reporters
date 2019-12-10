@@ -6,6 +6,7 @@ require (
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/nlopes/slack v0.6.0
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
 	github.com/step/angmar v0.0.0-20191127113211-fbeaab94f9b7

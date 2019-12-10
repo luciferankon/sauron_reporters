@@ -14,8 +14,9 @@ func main() {
 	stop := make(chan bool)
 	redisClient := getRedisClient()
 	mongoWriter := getMongoWriter()
+	slackClient := getSlackClient()
 
-	listener := eventlistener.NewListner(redisClient, mongoWriter)
+	listener := eventlistener.NewListner(redisClient, mongoWriter, slackClient)
 
 	go listener.Start("eventHub", r, stop)
 

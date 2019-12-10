@@ -4,13 +4,15 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	writer "github.com/step/sauron_reporters/pkg/writer"
+	"github.com/step/sauron_reporters/pkg/notifier"
+	"github.com/step/sauron_reporters/pkg/writer"
 	sClient "github.com/step/uruk/pkg/streamClient"
 )
 
 type Listner struct {
-	SClient sClient.StreamClient
-	Writer  writer.Writer
+	SClient  sClient.StreamClient
+	Writer   writer.Writer
+	Notifier notifier.Notifier
 }
 
 func (l Listner) Start(streamName string, r chan<- bool, stop <-chan bool) {
@@ -41,14 +43,16 @@ func (l Listner) Start(streamName string, r chan<- bool, stop <-chan bool) {
 					Values: value.Values,
 				}
 				l.Writer.Write(event.Values)
+				l.Notifier.Notify(event.Values)
 			}
 		}
 	}
 }
 
-func NewListner(sClient sClient.StreamClient, w writer.Writer) Listner {
+func NewListner(sClient sClient.StreamClient, w writer.Writer, notifier notifier.Notifier) Listner {
 	return Listner{
 		SClient: sClient,
 		Writer:  w,
+		Notifier: notifier,
 	}
 }
