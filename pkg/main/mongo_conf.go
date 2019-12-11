@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/step/sauron_reporters/pkg/writer"
 )
@@ -16,10 +17,11 @@ func init() {
 	flag.StringVar(&table, "table", "events", "`table name` to fetch data")
 }
 
-func getMongoWriter() writer.MongoDbWriter {
+func getMongoWriter(logger *log.Logger) writer.MongoDbWriter {
 	return writer.MongoDbWriter{
-		URI: mongoURI,
-		DB: db,
-		Table: table,
+		URI:    mongoURI,
+		DB:     db,
+		Table:  table,
+		Logger: logger,
 	}
 }

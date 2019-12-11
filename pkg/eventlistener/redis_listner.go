@@ -1,6 +1,7 @@
 package eventlistener
 
 import (
+	"log"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -9,15 +10,17 @@ import (
 	sClient "github.com/step/uruk/pkg/streamClient"
 )
 
-type Listner struct {
+type Listener struct {
 	SClient  sClient.StreamClient
 	Writer   writer.Writer
 	Notifier notifier.Notifier
+	Logger   *log.Logger
 }
 
-func (l Listner) Start(streamName string, r chan<- bool, stop <-chan bool) {
+func (l Listener) Start(sName string, r chan<- bool, stop <-chan bool) {
+	l.logStart(sName)
 	shouldStop := false
-	lastIDRead := "0"
+	lastReadID := "0"
 	go func() {
 		shouldStop = <-stop
 	}()
@@ -28,13 +31,14 @@ func (l Listner) Start(streamName string, r chan<- bool, stop <-chan bool) {
 			break
 		}
 		// Take all jobs since last read from stream
-		streamValues := l.SClient.Read([]string{streamName, lastIDRead})
+		streamValues := l.SClient.Read([]string{sName, lastReadID})
 		if len(streamValues) == 0 {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
-		lastIDRead = streamValues[len(streamValues)-1].ID
+		lastReadID = streamValues[len(streamValues)-1].ID
+		l.logRead(lastReadID)
 
 		for _, value := range streamValues {
 			if value.Values["type"] == "job_complete" {
@@ -49,10 +53,11 @@ func (l Listner) Start(streamName string, r chan<- bool, stop <-chan bool) {
 	}
 }
 
-func NewListner(sClient sClient.StreamClient, w writer.Writer, notifier notifier.Notifier) Listner {
-	return Listner{
-		SClient: sClient,
-		Writer:  w,
+func NewListner(sClient sClient.StreamClient, w writer.Writer, notifier notifier.Notifier, logger *log.Logger) Listener {
+	return Listener{
+		SClient:  sClient,
+		Writer:   w,
 		Notifier: notifier,
+		Logger:   logger,
 	}
 }

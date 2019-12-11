@@ -14,6 +14,7 @@ import (
 
 type SlackNotifier struct {
 	ApiKey string
+	Logger *log.Logger
 }
 
 type Users struct {
@@ -33,7 +34,7 @@ func getMessage(report string, events map[string]interface{}) string {
 	json.Unmarshal([]byte(reportJSON.Results), &results)
 	json.Unmarshal([]byte(results.Results), &testResult)
 
-	message := fmt.Sprintf("```Test Results\nTotal => %d\nPassed => %d\nFailed => %d\n```", testResult.Total, len(testResult.Passed), len(testResult.Failed))
+	message := fmt.Sprintf("```\nTest Results\nTotal => %d\nPassed => %d\nFailed => %d\n```", testResult.Total, len(testResult.Passed), len(testResult.Failed))
 	return message
 }
 
@@ -96,4 +97,5 @@ func (sn SlackNotifier) Notify(events map[string]interface{}) {
 	channelID := sn.getChannelID(api, userID)
 
 	sn.sendMessage(channelID, message, api)
+	sn.logNotification(message, recipient)
 }

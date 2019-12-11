@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	
+
 	st "github.com/step/saurontypes"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoDbWriter struct {
-	URI   string
-	DB    string
-	Table string
+	URI    string
+	DB     string
+	Table  string
+	Logger *log.Logger
 }
 
 func generateDBReport(report string, event map[string]interface{}) st.DBReport {
@@ -58,4 +59,5 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	docs = append(docs, dbReport)
 
 	eventsCollection.InsertMany(context.TODO(), docs)
+	mdbwriter.logWrite(dbReport.FlowID)
 }
