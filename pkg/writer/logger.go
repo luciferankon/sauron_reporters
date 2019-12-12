@@ -16,3 +16,12 @@ func (dbWriter MongoDbWriter) logWrite(flowID string) {
 	builder.WriteString("---\n")
 	dbWriter.Logger.Println(builder.String())
 }
+
+func (dbWriter MongoDbWriter) logError(message string, err error) {
+	var builder strings.Builder
+	builder.WriteString("\n---\n")
+	builder.WriteString("Error\n")
+	builder.WriteString(message + "\n" + err.Error() + "\n")
+	builder.WriteString("---\n")
+	dbWriter.Logger.Println(builder.String())
+}

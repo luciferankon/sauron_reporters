@@ -19,13 +19,24 @@ type MongoDbWriter struct {
 	Logger *log.Logger
 }
 
-func generateDBReport(report string, event map[string]interface{}) st.DBReport {
+func GenerateDBReport(report string, event map[string]interface{}) (st.DBReport, error) {
 	var reportJSON st.Report
 	var results st.Results
 	var testResult st.TestResult
-	json.Unmarshal([]byte(report), &reportJSON)
-	json.Unmarshal([]byte(reportJSON.Results), &results)
-	json.Unmarshal([]byte(results.Results), &testResult)
+	err := json.Unmarshal([]byte(report), &reportJSON)
+	if err != nil {
+		return st.DBReport{},err
+	}
+
+	err = json.Unmarshal([]byte(reportJSON.Results), &results)
+	if err != nil {
+		return st.DBReport{},err
+	}
+
+	err = json.Unmarshal([]byte(results.Results), &testResult)
+	if err != nil {
+		return st.DBReport{},err
+	}
 
 	return st.DBReport{
 		Job:     reportJSON.Job,
@@ -34,7 +45,7 @@ func generateDBReport(report string, event map[string]interface{}) st.DBReport {
 		Project: fmt.Sprintf("%v", event["project"]),
 		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
 		Time:    fmt.Sprintf("%v", event["timestamp"]),
-	}
+	} , nil
 }
 
 func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
@@ -55,7 +66,10 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	var docs []interface{}
 	details := fmt.Sprintf("%v", events["details"])
 	report := details[strings.IndexByte(details, '{'):]
-	dbReport := generateDBReport(report, events)
+	dbReport, err := GenerateDBReport(report, events)
+	if err != nil {
+		mdbwriter.logError("Unable to generate report", err)
+	}
 	docs = append(docs, dbReport)
 
 	eventsCollection.InsertMany(context.TODO(), docs)

@@ -14,8 +14,9 @@ import (
 )
 
 type SlackNotifier struct {
-	ApiKey string
-	Logger *log.Logger
+	ApiKey           string
+	Logger           *log.Logger
+	UserNameFilePath string
 }
 
 type Users struct {
@@ -27,7 +28,7 @@ type User struct {
 	SlackUserName  string `json:"slackUserName"`
 }
 
-func getMessage(report string) (string, error) {
+func GetMessage(report string) (string, error) {
 	var reportJSON st.Report
 	var results st.Results
 	var testResult st.TestResult
@@ -35,7 +36,6 @@ func getMessage(report string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	err = json.Unmarshal([]byte(reportJSON.Results), &results)
 	if err != nil {
 		return "", err
@@ -50,8 +50,8 @@ func getMessage(report string) (string, error) {
 	return message, nil
 }
 
-func getUserName(githubUserName interface{}) (string, error) {
-	jsonFile, err := os.Open("pkg/notifier/usernames.json")
+func GetUserName(githubUserName interface{}, userDataFilePath string) (string, error) {
+	jsonFile, err := os.Open(userDataFilePath)
 	if err != nil {
 		return "", err
 	}
@@ -75,11 +75,11 @@ func getUserName(githubUserName interface{}) (string, error) {
 	return "", errors.New("username not found")
 }
 
-func (sn SlackNotifier) getAPI() *slack.Client {
+func (sn SlackNotifier) GetAPI() *slack.Client {
 	return slack.New(sn.ApiKey)
 }
 
-func (sn SlackNotifier) getUserID(recipient string, api *slack.Client) string {
+func (sn SlackNotifier) GetUserID(recipient string, api *slack.Client) string {
 	users, err := api.GetUsers()
 	if err != nil {
 		log.Fatalf("Not able to get users due to ==> %s", err)
@@ -93,7 +93,7 @@ func (sn SlackNotifier) getUserID(recipient string, api *slack.Client) string {
 	return ""
 }
 
-func (sn SlackNotifier) getChannelID(api *slack.Client, userID string) string {
+func (sn SlackNotifier) GetChannelID(api *slack.Client, userID string) string {
 	_, _, channelID, err := api.OpenIMChannel(userID)
 	if err != nil {
 		log.Fatalf("Not able to open direct channel due to ==> %s", err)
@@ -101,7 +101,7 @@ func (sn SlackNotifier) getChannelID(api *slack.Client, userID string) string {
 	return channelID
 }
 
-func (sn SlackNotifier) sendMessage(channelID, message string, api *slack.Client) {
+func (sn SlackNotifier) SendMessage(channelID, message string, api *slack.Client) {
 	m := slack.MsgOptionText(message, true)
 	_, _, _, err := api.SendMessage(channelID, m)
 	if err != nil {
@@ -110,7 +110,7 @@ func (sn SlackNotifier) sendMessage(channelID, message string, api *slack.Client
 }
 
 func (sn SlackNotifier) Notify(events map[string]interface{}) {
-	recipient, err := getUserName(events["pusherID"])
+	recipient, err := GetUserName(events["pusherID"], sn.UserNameFilePath)
 	if err != nil {
 		sn.logError("Unable to find username", err)
 		return
@@ -119,16 +119,16 @@ func (sn SlackNotifier) Notify(events map[string]interface{}) {
 	details := fmt.Sprintf("%v", events["details"])
 	report := details[strings.IndexByte(details, '{'):]
 
-	message, err := getMessage(report)
+	message, err := GetMessage(report)
 	if err != nil {
 		sn.logError("Unable to generate message", err)
 		return
 	}
 
-	api := sn.getAPI()
-	userID := sn.getUserID(recipient, api)
-	channelID := sn.getChannelID(api, userID)
+	api := sn.GetAPI()
+	userID := sn.GetUserID(recipient, api)
+	channelID := sn.GetChannelID(api, userID)
 
-	sn.sendMessage(channelID, message, api)
+	sn.SendMessage(channelID, message, api)
 	sn.logNotification(message, recipient)
 }
