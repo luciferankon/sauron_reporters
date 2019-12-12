@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/nlopes/slack"
 	"github.com/step/sauron_reporters/pkg/notifier"
 )
 
@@ -15,8 +16,8 @@ func init() {
 
 func getSlackClient(logger *log.Logger, apiKey string) notifier.Notifier {
 	return notifier.SlackNotifier{
-		ApiKey:           apiKey,
 		Logger:           logger,
 		UserNameFilePath: userNameFilePath,
+		SlackClient:      slack.New(apiKey),
 	}
 }

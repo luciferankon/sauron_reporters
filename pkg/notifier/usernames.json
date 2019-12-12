@@ -1,12 +1,42 @@
 {
   "users": [
-    {
-      "githubUserName":"luciferankon",
-      "slackUserName":"Ankon"
-    },
-    {
-      "githubUserName":"cksharma11",
-      "slackUserName":"CHANDAN KUMAR"
-    }
+    { "slackUserName": "Ankon", "githubUsername": "bugdriver" },
+    { "slackUserName": "Ankon", "githubUsername": "trinangkur" },
+    { "slackUserName": "Ankon", "githubUsername": "sukhiboi" },
+    { "slackUserName": "Ankon", "githubUsername": "angrybirdno1" },
+    { "slackUserName": "Ankon", "githubUsername": "shankarbyageli" },
+    { "slackUserName": "Ankon", "githubUsername": "shiviraj" },
+    { "slackUserName": "Ankon", "githubUsername": "symbiote-ux" },
+    { "slackUserName": "Ankon", "githubUsername": "unphydra" },
+    { "slackUserName": "Ankon", "githubUsername": "armanaaquib" },
+    { "slackUserName": "Ankon", "githubUsername": "imvaishu" },
+    { "slackUserName": "Ankon", "githubUsername": "mildshower" },
+    { "slackUserName": "Ankon", "githubUsername": "rey-vthi" },
+    { "slackUserName": "Ankon", "githubUsername": "bsanthoshkumar" },
+    { "slackUserName": "Ankon", "githubUsername": "nooranasrin" },
+    { "slackUserName": "Ankon", "githubUsername": "palpriyanshu" },
+    { "slackUserName": "Ankon", "githubUsername": "sravani-labala" },
+    { "slackUserName": "Ankon", "githubUsername": "dad-ka-raneesa" },
+    { "slackUserName": "Ankon", "githubUsername": "cricket-lover" },
+    { "slackUserName": "Ankon", "githubUsername": "anil-muraleedharan" },
+    { "slackUserName": "Ankon", "githubUsername": "abhilashkasula" },
+    { "slackUserName": "Ankon", "githubUsername": "naveen-kumar-vadla" },
+    { "slackUserName": "Ankon", "githubUsername": "anujachaitanya" },
+    { "slackUserName": "Ankon", "githubUsername": "pssruthy" },
+    { "slackUserName": "Ankon", "githubUsername": "bernie-walker" },
+    { "slackUserName": "Ankon", "githubUsername": "neha-sanserwal" },
+    { "slackUserName": "Ankon", "githubUsername": "gulsane" },
+    { "slackUserName": "Ankon", "githubUsername": "myultimatevision" },
+    { "slackUserName": "Ankon", "githubUsername": "rahitkar" },
+    { "slackUserName": "Ankon", "githubUsername": "venkybavisetti" },
+    { "slackUserName": "Ankon", "githubUsername": "desibabua" },
+    { "slackUserName": "Ankon", "githubUsername": "melodyni" },
+    { "slackUserName": "Ankon", "githubUsername": "lazyhackerthani" },
+    { "slackUserName": "Ankon", "githubUsername": "apurvagurme" },
+    { "slackUserName": "Ankon", "githubUsername": "drishya-dobriyal" },
+    { "slackUserName": "Ankon", "githubUsername": "photongupta" },
+    { "slackUserName": "Ankon", "githubUsername": "bcalm" }
   ]
+
+
 }
