@@ -19,28 +19,53 @@ type MongoDbWriter struct {
 	Logger *log.Logger
 }
 
-func GenerateDBReport(report string, event map[string]interface{}) (st.DBReport, error) {
+func GenerateDBReport(report string, event map[string]interface{}) (interface{}, error) {
 	var reportJSON st.Report
-	var results st.Results
-	var testResult st.TestResult
 	err := json.Unmarshal([]byte(report), &reportJSON)
 	if err != nil {
-		return st.DBReport{}, err
+		return st.DBTestReport{}, err
 	}
 
+	var results st.Results
 	err = json.Unmarshal([]byte(reportJSON.Results), &results)
 	if err != nil {
-		return st.DBReport{}, err
+		return st.DBTestReport{}, err
 	}
 
-	err = json.Unmarshal([]byte(results.Results), &testResult)
+	if reportJSON.Job == "test" {
+		return GenerateDBReportForTest(results.Results, event)
+	}
+	return GenerateDBReportForLint(results.Results, event)
+}
+
+func GenerateDBReportForTest(results string, event map[string]interface{}) (interface{}, error) {
+	var testResult st.TestResult
+
+	err := json.Unmarshal([]byte(results), &testResult)
 	if err != nil {
-		return st.DBReport{}, err
+		return st.DBTestReport{}, err
 	}
 
-	return st.DBReport{
-		Job:     reportJSON.Job,
+	return st.DBTestReport{
+		Job:     "test",
 		Result:  testResult,
+		FlowID:  fmt.Sprintf("%v", event["flowID"]),
+		Project: fmt.Sprintf("%v", event["project"]),
+		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
+		Time:    fmt.Sprintf("%v", event["timestamp"]),
+	}, nil
+}
+
+func GenerateDBReportForLint(result string, event map[string]interface{}) (interface{}, error) {
+	var lintResult []st.LintResult
+	err := json.Unmarshal([]byte(result), &lintResult)
+	if err != nil {
+		return st.DBLintReport{}, err
+	}
+
+	return st.DBLintReport{
+		Job:     "lint",
+		Result:  lintResult,
 		FlowID:  fmt.Sprintf("%v", event["flowID"]),
 		Project: fmt.Sprintf("%v", event["project"]),
 		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
@@ -80,5 +105,5 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 		mdbwriter.logError("Unable to insert data due to => ", err)
 		return
 	}
-	mdbwriter.logWrite(dbReport.FlowID)
+	mdbwriter.logWrite(fmt.Sprintf("%v", events["flowID"]))
 }

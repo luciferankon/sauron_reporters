@@ -31,7 +31,6 @@ type User struct {
 func GetMessage(report string) (string, error) {
 	var reportJSON st.Report
 	var results st.Results
-	var testResult st.TestResult
 	err := json.Unmarshal([]byte(report), &reportJSON)
 	if err != nil {
 		return "", err
@@ -41,13 +40,47 @@ func GetMessage(report string) (string, error) {
 		return "", err
 	}
 
-	err = json.Unmarshal([]byte(results.Results), &testResult)
+	if reportJSON.Job == "test" {
+		return generateMessageForTest(results.Results)
+	}
+	return generateMessageForLint(results.Results)
+}
+
+func generateMessageForTest(results string) (string, error) {
+	var testResult st.TestResult
+	err := json.Unmarshal([]byte(results), &testResult)
 	if err != nil {
 		return "", err
 	}
-
 	message := fmt.Sprintf("```\nTest Results\nTotal => %d\nPassed => %d\nFailed => %d\n```", testResult.Total, len(testResult.Passed), len(testResult.Failed))
 	return message, nil
+}
+
+func generateMessageForLint(results string) (string, error) {
+	var lintResults []st.LintResult
+	err := json.Unmarshal([]byte(results), &lintResults)
+	if err != nil {
+		return "", err
+	}
+	var message strings.Builder
+	errorsCount := 0
+	message.WriteString("```\n")
+	for _, lintResult := range lintResults {
+		errorsCount += lintResult.ErrorCount
+		message.WriteString("---\n")
+		message.WriteString("Filename => " + lintResult.FileName + "\n")
+		message.WriteString("Error count => " + fmt.Sprintf("%d", lintResult.ErrorCount) + "\n")
+		message.WriteString("\nErrors\n======\n")
+
+		for _, lintMessage := range lintResult.Messages {
+			message.WriteString("Error " + lintMessage.Message + " found at line " + fmt.Sprintf("%d", lintMessage.Line) + " column " + fmt.Sprintf("%d", lintMessage.Col) + "\n")
+		}
+
+		message.WriteString("---\n\n")
+	}
+	message.WriteString("Total errors => " + fmt.Sprintf("%d", errorsCount) + "\n")
+	message.WriteString("```")
+	return message.String(), nil
 }
 
 func GetUserName(githubUserName interface{}, userDataFilePath string) (string, error) {
