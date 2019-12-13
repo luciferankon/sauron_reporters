@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/step/sauron_reporters/pkg/notifierClient"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/nlopes/slack"
 	st "github.com/step/saurontypes"
 )
 
 type SlackNotifier struct {
 	Logger           *log.Logger
 	UserNameFilePath string
-	SlackClient      *slack.Client
+	SlackClient      notifierClient.NotifierClient
 }
 
 type Users struct {
@@ -75,40 +75,40 @@ func GetUserName(githubUserName interface{}, userDataFilePath string) (string, e
 	return "", errors.New("username not found")
 }
 
-func (sn SlackNotifier) GetUserID(recipient string) string {
+func (sn SlackNotifier) GetUserID(recipient string) (string, error) {
 	users, err := sn.SlackClient.GetUsers()
 	if err != nil {
-		log.Fatalf("Not able to get users due to ==> %s", err)
+		return "", err
 	}
 
 	for _, user := range users {
 		if (user.RealName == recipient) || (user.Name == recipient) {
-			return user.ID
+			return user.ID, nil
 		}
 	}
-	return ""
+	return "",nil
 }
 
-func (sn SlackNotifier) GetChannelID(userID string) string {
+func (sn SlackNotifier) GetChannelID(userID string) (string, error) {
 	_, _, channelID, err := sn.SlackClient.OpenIMChannel(userID)
 	if err != nil {
-		log.Fatalf("Not able to open direct channel due to ==> %s", err)
+		return "", err
 	}
-	return channelID
+	return channelID, nil
 }
 
-func (sn SlackNotifier) SendMessage(channelID, message string) {
-	m := slack.MsgOptionText(message, true)
-	_, _, _, err := sn.SlackClient.SendMessage(channelID, m)
+func (sn SlackNotifier) SendMessage(channelID, message string) (bool, error) {
+	_, _, _, err := sn.SlackClient.SendMessage(channelID, message)
 	if err != nil {
-		log.Fatalf("Not able to send message due to ==> %s", err)
+		return false, err
 	}
+	return true, nil
 }
 
 func (sn SlackNotifier) Notify(events map[string]interface{}) {
 	recipient, err := GetUserName(events["pusherID"], sn.UserNameFilePath)
 	if err != nil {
-		sn.logError("Unable to find username", err)
+		sn.logError("Unable to find username => ", err)
 		return
 	}
 
@@ -117,13 +117,25 @@ func (sn SlackNotifier) Notify(events map[string]interface{}) {
 
 	message, err := GetMessage(report)
 	if err != nil {
-		sn.logError("Unable to generate message", err)
+		sn.logError("Unable to generate message due to => ", err)
 		return
 	}
 
-	userID := sn.GetUserID(recipient)
-	channelID := sn.GetChannelID(userID)
+	userID, err := sn.GetUserID(recipient)
+	if err != nil {
+		sn.logError("Unable to get userID due to => ", err)
+		return
+	}
+	channelID, err := sn.GetChannelID(userID)
+	if err != nil {
+		sn.logError("Unable to get channelID due to => ", err)
+		return
+	}
 
-	sn.SendMessage(channelID, message)
+	isSent, err := sn.SendMessage(channelID, message)
+	if !isSent && err != nil {
+		sn.logError("Unable to send message due to => ", err)
+		return
+	}
 	sn.logNotification(message, recipient)
 }

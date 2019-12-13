@@ -53,13 +53,15 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
-		log.Fatal(err)
+		mdbwriter.logError("Unable to connect due to => ", err)
+		return
 	}
 
 	err = client.Ping(context.TODO(), nil)
 
 	if err != nil {
-		log.Fatal(err)
+		mdbwriter.logError("Unable to ping due to => ", err)
+		return
 	}
 
 	eventsCollection := client.Database(mdbwriter.DB).Collection(mdbwriter.Table)
@@ -69,9 +71,14 @@ func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
 	dbReport, err := GenerateDBReport(report, events)
 	if err != nil {
 		mdbwriter.logError("Unable to generate report", err)
+		return
 	}
 	docs = append(docs, dbReport)
 
-	eventsCollection.InsertMany(context.TODO(), docs)
+	_, err = eventsCollection.InsertMany(context.TODO(), docs)
+	if err != nil {
+		mdbwriter.logError("Unable to insert data due to => ", err)
+		return
+	}
 	mdbwriter.logWrite(dbReport.FlowID)
 }
