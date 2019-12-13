@@ -19,6 +19,6 @@ func getSlackClient(logger *log.Logger, apiKey string) notifier.Notifier {
 	return notifier.SlackNotifier{
 		Logger:           logger,
 		UserNameFilePath: userNameFilePath,
-		SlackClient:      notifierClient.SlackNotifierClient{Client:slack.New(apiKey)},
+		SlackClient:      notifierClient.SlackNotifierClient{Client: slack.New(apiKey)},
 	}
 }

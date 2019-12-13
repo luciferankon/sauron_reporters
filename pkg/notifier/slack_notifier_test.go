@@ -34,7 +34,7 @@ func (m mockSlackNotifierClient) OpenIMChannel(user string) (bool, bool, string,
 
 func (m mockSlackNotifierClient) SendMessage(channelID string, message string) (string, string, string, error) {
 	if channelID == "validChannelID" {
-		return "","","",nil
+		return "", "", "", nil
 	}
 	return "", "", "", errors.New("unable to send message")
 }
@@ -303,7 +303,7 @@ func TestSlackNotifier_GetChannelID(t *testing.T) {
 				UserNameFilePath: tt.fields.UserNameFilePath,
 				SlackClient:      tt.fields.SlackClient,
 			}
-			got,err := sn.GetChannelID(tt.args.userID);
+			got, err := sn.GetChannelID(tt.args.userID)
 			if err != nil && err.Error() != tt.wantErr.Error() {
 				t.Errorf("GetMessage() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -333,13 +333,13 @@ func TestSlackNotifier_SendMessage(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "should return true and no error if message is sent",
-			fields:  fields{
+			name: "should return true and no error if message is sent",
+			fields: fields{
 				Logger:           nil,
 				UserNameFilePath: "",
 				SlackClient:      mockSlackNotifierClient{WantErr: false},
 			},
-			args:    args{
+			args: args{
 				channelID: "validChannelID",
 				message:   "someMessage",
 			},
@@ -347,13 +347,13 @@ func TestSlackNotifier_SendMessage(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:    "should return false and error if message is not sent",
-			fields:  fields{
+			name: "should return false and error if message is not sent",
+			fields: fields{
 				Logger:           nil,
 				UserNameFilePath: "",
 				SlackClient:      mockSlackNotifierClient{WantErr: false},
 			},
-			args:    args{
+			args: args{
 				channelID: "invalidChannelID",
 				message:   "someMessage",
 			},

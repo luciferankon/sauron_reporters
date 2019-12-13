@@ -25,17 +25,17 @@ func GenerateDBReport(report string, event map[string]interface{}) (st.DBReport,
 	var testResult st.TestResult
 	err := json.Unmarshal([]byte(report), &reportJSON)
 	if err != nil {
-		return st.DBReport{},err
+		return st.DBReport{}, err
 	}
 
 	err = json.Unmarshal([]byte(reportJSON.Results), &results)
 	if err != nil {
-		return st.DBReport{},err
+		return st.DBReport{}, err
 	}
 
 	err = json.Unmarshal([]byte(results.Results), &testResult)
 	if err != nil {
-		return st.DBReport{},err
+		return st.DBReport{}, err
 	}
 
 	return st.DBReport{
@@ -45,7 +45,7 @@ func GenerateDBReport(report string, event map[string]interface{}) (st.DBReport,
 		Project: fmt.Sprintf("%v", event["project"]),
 		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
 		Time:    fmt.Sprintf("%v", event["timestamp"]),
-	} , nil
+	}, nil
 }
 
 func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {

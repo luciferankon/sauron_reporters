@@ -86,7 +86,7 @@ func (sn SlackNotifier) GetUserID(recipient string) (string, error) {
 			return user.ID, nil
 		}
 	}
-	return "",nil
+	return "", nil
 }
 
 func (sn SlackNotifier) GetChannelID(userID string) (string, error) {

@@ -11,11 +11,11 @@ import (
 
 func main() {
 	flag.Parse()
-	
+
 	listenerLogger := log.New(os.Stdout, "listener ", log.LstdFlags)
 	notifierLogger := log.New(os.Stdout, "notifier ", log.LstdFlags)
 	writerLogger := log.New(os.Stdout, "writer ", log.LstdFlags)
-	
+
 	slackAuth := os.Getenv("API_KEY")
 
 	r := make(chan bool, 100)
