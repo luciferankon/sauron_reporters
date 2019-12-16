@@ -20,7 +20,7 @@ type Listener struct {
 func (l Listener) Start(sName string, r chan<- bool, stop <-chan bool) {
 	l.logStart(sName)
 	shouldStop := false
-	lastReadID := "0"
+			lastReadID := "0"
 	go func() {
 		shouldStop = <-stop
 	}()

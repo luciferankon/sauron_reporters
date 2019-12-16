@@ -4,16 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"strings"
-
 	st "github.com/step/saurontypes"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"strings"
 )
 
 type MongoDbWriter struct {
-	URI    string
+	Client *mongo.Client
 	DB     string
 	Table  string
 	Logger *log.Logger
@@ -53,6 +51,7 @@ func GenerateDBReportForTest(results string, event map[string]interface{}) (inte
 		Project: fmt.Sprintf("%v", event["project"]),
 		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
 		Time:    fmt.Sprintf("%v", event["timestamp"]),
+		SHA:     fmt.Sprintf("%v", event["sha"]),
 	}, nil
 }
 
@@ -70,26 +69,23 @@ func GenerateDBReportForLint(result string, event map[string]interface{}) (inter
 		Project: fmt.Sprintf("%v", event["project"]),
 		Pusher:  fmt.Sprintf("%v", event["pusherID"]),
 		Time:    fmt.Sprintf("%v", event["timestamp"]),
+		SHA:     fmt.Sprintf("%v", event["sha"]),
 	}, nil
 }
 
 func (mdbwriter MongoDbWriter) Write(events map[string]interface{}) {
-	clientOptions := options.Client().ApplyURI(mdbwriter.URI)
-	client, err := mongo.Connect(context.TODO(), clientOptions)
 
-	if err != nil {
-		mdbwriter.logError("Unable to connect due to => ", err)
-		return
-	}
+	// clientOptions := options.Client().ApplyURI(mdbwriter.URI)
+	// client, err := mongo.Connect(context.TODO(), clientOptions)
 
-	err = client.Ping(context.TODO(), nil)
+	err := mdbwriter.Client.Ping(context.TODO(), nil)
 
 	if err != nil {
 		mdbwriter.logError("Unable to ping due to => ", err)
 		return
 	}
 
-	eventsCollection := client.Database(mdbwriter.DB).Collection(mdbwriter.Table)
+	eventsCollection := mdbwriter.Client.Database(mdbwriter.DB).Collection(mdbwriter.Table)
 	var docs []interface{}
 	details := fmt.Sprintf("%v", events["details"])
 	report := details[strings.IndexByte(details, '{'):]
