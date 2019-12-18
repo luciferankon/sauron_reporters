@@ -84,7 +84,6 @@ func generateMessageForLint(results string) (string, error) {
 func GetUserName(githubUserName interface{}, userDataFilePath string) (string, error) {
 	jsonFile, err := os.Open(userDataFilePath)
 
-	
 	if err != nil {
 		return "", err
 	}
@@ -173,7 +172,7 @@ func (sn SlackNotifier) Notify(events map[string]interface{}) {
 		return
 	}
 
-	isSent, err := sn.SendMessage(channelID, fmt.Sprintf("%s\nPusher => %v\n",message,events["pusherID"]))
+	isSent, err := sn.SendMessage(channelID, fmt.Sprintf("%s\nPusher => %v\n", message, events["pusherID"]))
 	if !isSent && err != nil {
 		sn.logError("Unable to send message due to => ", err)
 		return

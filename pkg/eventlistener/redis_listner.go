@@ -1,6 +1,7 @@
 package eventlistener
 
 import (
+	"github.com/step/angmar/pkg/hashClient"
 	"log"
 	"time"
 
@@ -11,16 +12,17 @@ import (
 )
 
 type Listener struct {
-	SClient  sClient.StreamClient
-	Writer   writer.Writer
-	Notifier notifier.Notifier
-	Logger   *log.Logger
+	SClient    sClient.StreamClient
+	HashClient hashClient.HashClient
+	Writer     writer.Writer
+	Notifier   notifier.Notifier
+	Logger     *log.Logger
 }
 
 func (l Listener) Start(sName string, r chan<- bool, stop <-chan bool) {
 	l.logStart(sName)
 	shouldStop := false
-			lastReadID := "0"
+	lastReadID := l.HashClient.Get("IDHash", "lastReadID")
 	go func() {
 		shouldStop = <-stop
 	}()
@@ -38,6 +40,7 @@ func (l Listener) Start(sName string, r chan<- bool, stop <-chan bool) {
 		}
 
 		lastReadID = streamValues[len(streamValues)-1].ID
+		l.HashClient.Set("IDHash", "lastReadID", lastReadID)
 		l.logRead(lastReadID)
 
 		for _, value := range streamValues {
@@ -53,11 +56,12 @@ func (l Listener) Start(sName string, r chan<- bool, stop <-chan bool) {
 	}
 }
 
-func NewListner(sClient sClient.StreamClient, w writer.Writer, notifier notifier.Notifier, logger *log.Logger) Listener {
+func NewListner(sClient sClient.StreamClient, hashClient hashClient.HashClient, w writer.Writer, notifier notifier.Notifier, logger *log.Logger) Listener {
 	return Listener{
-		SClient:  sClient,
-		Writer:   w,
-		Notifier: notifier,
-		Logger:   logger,
+		SClient:    sClient,
+		HashClient: hashClient,
+		Writer:     w,
+		Notifier:   notifier,
+		Logger:     logger,
 	}
 }

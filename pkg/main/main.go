@@ -24,7 +24,7 @@ func main() {
 	mongoWriter := getMongoWriter(writerLogger)
 	slackClient := getSlackClient(notifierLogger, slackAuth)
 
-	listener := eventlistener.NewListner(redisClient, mongoWriter, slackClient, listenerLogger)
+	listener := eventlistener.NewListner(redisClient, redisClient, mongoWriter, slackClient, listenerLogger)
 
 	go listener.Start("eventHub", r, stop)
 
