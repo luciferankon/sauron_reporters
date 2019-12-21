@@ -1,6 +1,7 @@
 package eventlistener
 
 import (
+	"fmt"
 	"github.com/step/angmar/pkg/hashClient"
 	"log"
 	"time"
